@@ -1,0 +1,40 @@
+{
+  "name"           : "satree",
+  "version"        : "0.1.0",
+  "description"    : "Javascript library that allows display of math formulas in Context MathML as trees for disambiguation",
+  "keywords"       : [
+    "mathml",
+    "tree",
+    "disambiguator"
+  ],
+  "homepage"       : "https://github.com/woland84/satree",
+  "bugs"           : {
+    "url"  : "https://github.com/woland84/satree/project/issues",
+    "email": "alex@flanche.net"
+  },
+  "contributors"   : [
+    {
+      "name" : "Alex Dumitru",
+      "email": "alex@flanche.net",
+      "url"  : "http://alex.flanche.net"
+    },
+    {
+      "name" : "Vlad Merticariu",
+      "email": "vlad@flanche.net",
+      "url"  : "http://vlad.flanche.net"
+    }
+  ],
+  "files"          : [
+    "src",
+    "test",
+    "dist"
+  ],
+  "repository"     : {
+    "type": "git",
+    "url" : "https://github.com/woland84/satree/satree.git"
+  },
+  "devDependencies": {
+    "gear"    : "*",
+    "gear-lib": "*"
+  }
+}

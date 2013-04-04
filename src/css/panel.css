@@ -1,0 +1,40 @@
+.modal-header {
+    text-align: center;
+}
+
+.tree-div {
+    float: left;
+}
+
+.tree-div-header {
+    padding: 5px;
+}
+
+.tree, #infovis, #infovis2, #infovis3 {
+    position: relative;
+    margin: auto;
+    overflow: hidden;
+}
+
+.tree-fail {
+    float: right;
+}
+
+#satree-math-controls {
+    font-size: 10px;
+}
+
+#satree-math-controls h2 {
+    font-size: 12px;
+}
+
+#satree-math-controls {
+    background: #bbffbb;
+    border-radius: 5px;
+    padding: 2px;
+    width: 150px;
+    position: fixed;
+    margin: 2px;
+    bottom: 0;
+    right: 0;
+}

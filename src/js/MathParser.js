@@ -123,13 +123,8 @@ FlancheJs.defineClass("satree.MathParser", {
      * @param xmlNode the xml node to be checked
      */
     tagCdlfNodes: function (tree, xmlNode) {
-      var siblings = xmlNode.parentNode.children;
-      if (siblings) {
-        _.toArray(siblings).forEach(function (sibling) {
-          if (sibling.getAttribute("cd") == "cdlf") {
-            tree.setTag("ambiguous");
-          }
-        });
+      if(xmlNode.getAttribute("cd") == "cdlf"){
+        tree.setTag("ambiguous");
       }
     },
 

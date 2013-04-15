@@ -47,6 +47,34 @@ To deploy the script all you have to do is include it alongside the css and star
 	</script>
 ```
 
+Configuration
+-------------
+You can configure several features of the library using the ConfigManager object. All configuration options are documented
+in the class file.
+You should usually set up your configuration before calling the run method of the Manager object, although you can always
+change them during runtime and refresh the Manager.
+
+Server-side
+-----------
+The results of the disambiguation action are always sent to a server specified by the user using the POST HTTP method.
+The format is the following
+
+```json
+  {
+    "correct" : "Boolean" //true/false depending on the user's choice
+    "id"      : "String"  //the id of the math element that was disambiguated
+    "formula" : "String"  //the MathMl contents of the examined node
+    "tree"    : "Json"    //the json representation of the tree built to represent the MathMl
+  }
+```
+
+To set the url to which the result is sent use the ConfigManger e.g.:
+```Javascript
+  satree.ConfigManager.setSubmitUrl("http://host/contextPath");
+```
+
+There is a simple php script under src/php that you can use as an example.
+
 Issues
 ------
 If you encounter any issues please submit a bug report at https://github.com/woland84/satree/issues

@@ -6,13 +6,13 @@
 
 FlancheJs.defineClass("satree.TreeRenderer", {
 
-  init: function(tree, selector, renderMode){
+  init: function (tree, selector, renderMode) {
     this.setTree(tree);
     this.setSelector(selector);
-    if(renderMode){
+    if (renderMode) {
       this.setRenderMode(renderMode)
     }
-    else{
+    else {
       this.setRenderMode(this.SpaceTree);
     }
   },
@@ -31,23 +31,23 @@ FlancheJs.defineClass("satree.TreeRenderer", {
     },
 
     offsetX: {
-      value : 0
+      value: 0
     },
 
     offsetY: {
-      value : 125
+      value: 125
     }
   },
 
   methods: {
-    streamUpContent: function(node){
-      
+    streamUpContent: function (node) {
+
     },
-    
-    render: function(){
+
+    render: function () {
       var that = this;
       var json = this._toSpaceTreeJson();
-      this.tree = new $jit.ST({
+      this._tree = new $jit.ST({
         //id of viz container element
         injectInto   : _.getId(this.getSelector()),
         //set duration for the animation
@@ -73,7 +73,7 @@ FlancheJs.defineClass("satree.TreeRenderer", {
           autoWidth  : true,
           height     : 0,
           overridable: true
-        // dim: 25
+          // dim: 25
         },
 
         Edge: {
@@ -83,42 +83,37 @@ FlancheJs.defineClass("satree.TreeRenderer", {
           overridable: true
         },
 
-        onBeforeCompute: function(node){
-          
-        // Log.write("loading " + node.name);
+        onBeforeCompute: function (node) {
         },
 
-        onAfterCompute  : function(){
-          
-        //Log.write("done");
+        onAfterCompute  : function () {
         },
 
         //This method is called on DOM label creation.
         //Use this method to add event handlers and styles to
         //your node.
-        onCreateLabel   : function(label, node){     
-//         if(node._depth){
-//            var adj = node.adjacencies;
-//            for(var i in adj){
-//              if(adj[i].nodeTo.drawn == false){
-//                console.log(node.id);
-//                var mathId = node.id.split('-satree');
-//                mathId = mathId[0];
-//                console.log(mathId);
-//                if(document.getElementById(mathId)){
-//                  var div = document.createElement('div');
-//                  div.appendChild(document.getElementById(mathId).cloneNode(true))
-//                  node.name =  div.innerHTML;
-//                }
-//                break;
-//              }
-//            }
-//          }
+        onCreateLabel   : function (label, node) {
+          if (satree.ConfigManager.getSummarizedMode() && node._depth) {
+            var content = "";
+            var mathNode = document.getElementById(node.id.split("-satree")[0]);
+            if (mathNode) {
+              if (mathNode.tagName == "math") {
+                content = satree.TreeRenderer.CannotSummarizeSymbol
+              }
+              else {
+                content = "<math>" + mathNode.cloneNode(true).innerHTML + "</math>";
+              }
+            }
+            else {
+              content = satree.TreeRenderer.CannotSummarizeSymbol;
+            }
+            node.name = content;
+          }
 
           label.id = node.id;
-          label.innerHTML = node.name;          
-          label.onclick = function(){
-            that.tree.onClick(node.id);
+          label.innerHTML = node.name;
+          label.onclick = function () {
+            that._tree.onClick(node.id);
           };
           //set label styles
           var style = label.style;
@@ -137,14 +132,14 @@ FlancheJs.defineClass("satree.TreeRenderer", {
         //style properties before plotting it.
         //The data properties prefixed with a dollar
         //sign will override the global node style properties.
-        onBeforePlotNode: function(node){
-          
+        onBeforePlotNode: function (node) {
+
           //add some color to the nodes in the path between the
           //root node and the selected node.
-          if(node.selected){
+          if (node.selected) {
             node.data.$color = "#D25232";
           }
-          else{
+          else {
             delete node.data.$color;
           }
         },
@@ -154,54 +149,54 @@ FlancheJs.defineClass("satree.TreeRenderer", {
         //style properties before plotting it.
         //Edge data proprties prefixed with a dollar sign will
         //override the Edge global style properties.
-        onBeforePlotLine: function(adj){
-          if(adj.nodeFrom.selected && adj.nodeTo.selected){
+        onBeforePlotLine: function (adj) {
+          if (adj.nodeFrom.selected && adj.nodeTo.selected) {
             adj.data.$color = "#3E73CB";
             adj.data.$lineWidth = 3;
           }
-          else{
+          else {
             delete adj.data.$color;
             delete adj.data.$lineWidth;
           }
         }
       });
       //load json data
-      this.tree.loadJSON(json);
+      this._tree.loadJSON(json);
       //compute node positions and layout
-      this.tree.compute();
+      this._tree.compute();
       //optional: make a translation of the tree
-      this.tree.geom.translate(new $jit.Complex(-200, 0), "current");
+      this._tree.geom.translate(new $jit.Complex(-200, 0), "current");
       //emulate a click on the root node.
-      this.tree.onClick(this.tree.root);
+      this._tree.onClick(this._tree.root);
     },
 
-    destroy: function(){
+    destroy: function () {
       jQuery(this.getSelector()).html("");
       delete this._spaceTree;
     },
 
-    refresh: function(){
+    refresh: function () {
       this.destroy();
       this.render();
     }
   },
 
   internals: {
-    toSpaceTreeJson: function(){
+    toSpaceTreeJson: function () {
       var jsonTree = this._toSpaceTreeJsonRecursive(this.getTree());
       return jsonTree;
     },
 
-    toSpaceTreeJsonRecursive: function(tree){
+    toSpaceTreeJsonRecursive: function (tree) {
       var jsonNode = {
         id      : tree.getMathId() + '-' + _.uniqueId("satree-"),
         name    : tree.getContent(),
         children: []
       };
-      if(!tree.isLeaf()){
+      if (!tree.isLeaf()) {
         var children = tree.getChildren();
         var jsChildren = [];
-        for(var i = 0; i < children.length; i++){
+        for (var i = 0; i < children.length; i++) {
           jsChildren.push(this._toSpaceTreeJsonRecursive(children[i]));
         }
         jsonNode.children = jsChildren;
@@ -209,13 +204,14 @@ FlancheJs.defineClass("satree.TreeRenderer", {
       return jsonNode;
     },
 
-    spaceTree : null
+    spaceTree: null
 
 
   },
 
   statics: {
-    SpaceTree: 1
+    SpaceTree            : 1,
+    CannotSummarizeSymbol: "!Summ"
   }
 
 });

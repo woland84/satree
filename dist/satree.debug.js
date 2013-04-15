@@ -294,9 +294,6 @@ _.mixin({
     if(console && console.warn){
       console.warn(arguments);
     }
-    else{
-
-    }
   }
 })/**
  * @description Defines a basic tree that can be rendered on an html page
@@ -465,6 +462,22 @@ FlancheJs.defineClass("satree.Node", {
         newNode.setParent(parent);
       }
       return newTree;
+    },
+
+    getSimpleRepresentation : function(){
+      var simpleReprRec = function(tree){
+        var newTree = {
+          content : tree.getContent(),
+          tag : tree.getTag(),
+          children : []
+        }
+        var children = tree.getChildren();
+        for(var i = 0; i < children.length; i++){
+          newTree.children.push(simpleReprRec(children[i]));
+        }
+        return newTree;
+      }
+      return simpleReprRec(this.clone());
     }
   },
 
@@ -610,13 +623,8 @@ FlancheJs.defineClass("satree.MathParser", {
      * @param xmlNode the xml node to be checked
      */
     tagCdlfNodes: function (tree, xmlNode) {
-      var siblings = xmlNode.parentNode.children;
-      if (siblings) {
-        _.toArray(siblings).forEach(function (sibling) {
-          if (sibling.getAttribute("cd") == "cdlf") {
-            tree.setTag("ambiguous");
-          }
-        });
+      if(xmlNode.getAttribute("cd") == "cdlf"){
+        tree.setTag("ambiguous");
       }
     },
 
@@ -670,6 +678,39 @@ FlancheJs.defineClass("satree.MathParser", {
 
 })
 /**
+ * @description Contains all the configurations needed for the library
+ * @author <a href="mailto:alex@flanche.net">Alex Dumitru</a>
+ * @author <a href="mailto:vlad@flanche.net">Vlad Merticariu</a>
+ */
+
+FlancheJs.defineClass("satree._ConfigManager", {
+
+  init : function(){
+
+  },
+
+  properties: {
+
+    //Display the math in summary form when the node is collapsed
+    summarizedMode : {
+      value : false
+    },
+
+    //Render the nodes either using Math display (i.e. operator is the root) or Apply display mode (i.e. apply sign is the root)
+    renderMode : {
+      value : satree.MathParser.ModeApply
+    },
+
+    //The url where the results of the disambiguation should be submitted
+    submitUrl : {
+      value : null
+    }
+
+  }
+
+})
+
+satree.ConfigManager = new satree._ConfigManager();/**
  * @description Looks for ambiguos parts in a tree
  * @author <a href="mailto:alex@flanche.net">Alex Dumitru</a>
  * @author <a href="mailto:vlad@flanche.net">Vlad Merticariu</a>
@@ -681,7 +722,7 @@ FlancheJs.defineClass("satree.Disambiguator", {
    * Constructor for the disambiguator
    * @param {satree.Node} tree the tree to be disambiguated
    */
-  init: function(tree){
+  init: function (tree) {
     this._tree = tree;
   },
 
@@ -690,20 +731,23 @@ FlancheJs.defineClass("satree.Disambiguator", {
      * Generates a set of trees from an ambiguous tree
      * @return {Array}
      */
-    generateTrees: function(){
-      this._lookupCdlfNodes();
-      var trees = [];
-      var self = this;
-      if(this._applys){
-        for(var i = 0; i < this._applys.length; i++){
-          var newTree = self._tree.clone().replace(self._splitNode, self._applys[i]);
-          trees.push(newTree);
+    generateTrees: function () {
+      var originalTree = this._tree;
+      var finalTrees = [];
+      var ambiguousTrees = [originalTree]
+      while (ambiguousTrees.length) {
+        var currentTree = ambiguousTrees.pop()
+        var genTrees = this._generateTreesRecursive(currentTree);
+        for (var i = 0; i < genTrees.length; i++) {
+          if (this._treeHasAmbiguities(genTrees[i])) {
+            ambiguousTrees.push(genTrees[i]);
+          }
+          else {
+            finalTrees.push(genTrees[i]);
+          }
         }
       }
-      else{
-        trees.push(this._tree);
-      }
-      return trees;
+      return finalTrees;
     }
   },
 
@@ -714,31 +758,67 @@ FlancheJs.defineClass("satree.Disambiguator", {
     splitNode: null,
     //the sub trees under the ambiguation node
     applys   : null,
+    searchNoMore : false,
+
+
+    generateTreesRecursive: function (tree) {
+      var splitters = this._lookupCdlfNodes();
+      var trees = [];
+      if (splitters.applys) {
+        for (var i = 0; i < splitters.applys.length; i++) {
+          var newTree = tree.clone().replace(splitters.splitNode, splitters.applys[i]);
+          trees.push(newTree);
+        }
+      }
+      else {
+        trees.push(tree);
+      }
+      return trees;
+    },
+
+    treeHasAmbiguities: function (tree) {
+      var hasAmbig = false;
+      tree.forEach(function (item) {
+        if (item.getTag() == "ambiguous") {
+          hasAmbig = true
+        }
+      })
+      return hasAmbig;
+    },
 
     /**
      * Looks up ambiguous tagged nodes in the tree
      */
-    lookupCdlfNodes: function(){
-      this._lookupCdlfNodesRecursive(this._tree)
+    lookupCdlfNodes: function () {
+      var ret = {
+        applys   : null,
+        splitNode: null
+      }
+      this._searchNoMore = false;
+      this._lookupCdlfNodesRecursive(this._tree, ret)
+      return ret;
     },
 
     /**
      * Helper function to search the tree recursively for ambiguous tagged nodes
      * @param tree the tree in which to search
+     * @param ret the object in which the applys and splitNode will be put
      */
-    lookupCdlfNodesRecursive: function(tree){
-      if(tree.getTag() == "ambiguous"){
-        this._applys = tree.getParent().getChildren().slice(1);
-        this._splitNode = tree.getParent();
+    lookupCdlfNodesRecursive: function (tree, ret) {
+      if (tree.getTag() == "ambiguous" && !this._searchNoMore) {
+        tree.setTag(null);
+        this._searchNoMore = true;
+        ret.applys = tree.getParent().getChildren().slice(1);
+        ret.splitNode = tree.getParent();
         return;
       }
-      else{
-        if(tree.isLeaf()){
+      else {
+        if (tree.isLeaf()) {
           return;
         }
         var self = this;
-        tree.getChildren().forEach(function(node){
-          self._lookupCdlfNodesRecursive(node);
+        tree.getChildren().forEach(function (node) {
+          self._lookupCdlfNodesRecursive(node, ret);
         })
       }
     }
@@ -753,13 +833,13 @@ FlancheJs.defineClass("satree.Disambiguator", {
 
 FlancheJs.defineClass("satree.TreeRenderer", {
 
-  init: function(tree, selector, renderMode){
+  init: function (tree, selector, renderMode) {
     this.setTree(tree);
     this.setSelector(selector);
-    if(renderMode){
+    if (renderMode) {
       this.setRenderMode(renderMode)
     }
-    else{
+    else {
       this.setRenderMode(this.SpaceTree);
     }
   },
@@ -778,23 +858,23 @@ FlancheJs.defineClass("satree.TreeRenderer", {
     },
 
     offsetX: {
-      value : 0
+      value: 0
     },
 
     offsetY: {
-      value : 125
+      value: 125
     }
   },
 
   methods: {
-    streamUpContent: function(node){
-      
+    streamUpContent: function (node) {
+
     },
-    
-    render: function(){
+
+    render: function () {
       var that = this;
       var json = this._toSpaceTreeJson();
-      this.tree = new $jit.ST({
+      this._tree = new $jit.ST({
         //id of viz container element
         injectInto   : _.getId(this.getSelector()),
         //set duration for the animation
@@ -820,7 +900,7 @@ FlancheJs.defineClass("satree.TreeRenderer", {
           autoWidth  : true,
           height     : 0,
           overridable: true
-        // dim: 25
+          // dim: 25
         },
 
         Edge: {
@@ -830,42 +910,37 @@ FlancheJs.defineClass("satree.TreeRenderer", {
           overridable: true
         },
 
-        onBeforeCompute: function(node){
-          
-        // Log.write("loading " + node.name);
+        onBeforeCompute: function (node) {
         },
 
-        onAfterCompute  : function(){
-          
-        //Log.write("done");
+        onAfterCompute  : function () {
         },
 
         //This method is called on DOM label creation.
         //Use this method to add event handlers and styles to
         //your node.
-        onCreateLabel   : function(label, node){     
-//         if(node._depth){
-//            var adj = node.adjacencies;
-//            for(var i in adj){
-//              if(adj[i].nodeTo.drawn == false){
-//                console.log(node.id);
-//                var mathId = node.id.split('-satree');
-//                mathId = mathId[0];
-//                console.log(mathId);
-//                if(document.getElementById(mathId)){
-//                  var div = document.createElement('div');
-//                  div.appendChild(document.getElementById(mathId).cloneNode(true))
-//                  node.name =  div.innerHTML;
-//                }
-//                break;
-//              }
-//            }
-//          }
+        onCreateLabel   : function (label, node) {
+          if (satree.ConfigManager.getSummarizedMode() && node._depth) {
+            var content = "";
+            var mathNode = document.getElementById(node.id.split("-satree")[0]);
+            if (mathNode) {
+              if (mathNode.tagName == "math") {
+                content = satree.TreeRenderer.CannotSummarizeSymbol
+              }
+              else {
+                content = "<math>" + mathNode.cloneNode(true).innerHTML + "</math>";
+              }
+            }
+            else {
+              content = satree.TreeRenderer.CannotSummarizeSymbol;
+            }
+            node.name = content;
+          }
 
           label.id = node.id;
-          label.innerHTML = node.name;          
-          label.onclick = function(){
-            that.tree.onClick(node.id);
+          label.innerHTML = node.name;
+          label.onclick = function () {
+            that._tree.onClick(node.id);
           };
           //set label styles
           var style = label.style;
@@ -884,14 +959,14 @@ FlancheJs.defineClass("satree.TreeRenderer", {
         //style properties before plotting it.
         //The data properties prefixed with a dollar
         //sign will override the global node style properties.
-        onBeforePlotNode: function(node){
-          
+        onBeforePlotNode: function (node) {
+
           //add some color to the nodes in the path between the
           //root node and the selected node.
-          if(node.selected){
+          if (node.selected) {
             node.data.$color = "#D25232";
           }
-          else{
+          else {
             delete node.data.$color;
           }
         },
@@ -901,54 +976,54 @@ FlancheJs.defineClass("satree.TreeRenderer", {
         //style properties before plotting it.
         //Edge data proprties prefixed with a dollar sign will
         //override the Edge global style properties.
-        onBeforePlotLine: function(adj){
-          if(adj.nodeFrom.selected && adj.nodeTo.selected){
+        onBeforePlotLine: function (adj) {
+          if (adj.nodeFrom.selected && adj.nodeTo.selected) {
             adj.data.$color = "#3E73CB";
             adj.data.$lineWidth = 3;
           }
-          else{
+          else {
             delete adj.data.$color;
             delete adj.data.$lineWidth;
           }
         }
       });
       //load json data
-      this.tree.loadJSON(json);
+      this._tree.loadJSON(json);
       //compute node positions and layout
-      this.tree.compute();
+      this._tree.compute();
       //optional: make a translation of the tree
-      this.tree.geom.translate(new $jit.Complex(-200, 0), "current");
+      this._tree.geom.translate(new $jit.Complex(-200, 0), "current");
       //emulate a click on the root node.
-      this.tree.onClick(this.tree.root);
+      this._tree.onClick(this._tree.root);
     },
 
-    destroy: function(){
+    destroy: function () {
       jQuery(this.getSelector()).html("");
       delete this._spaceTree;
     },
 
-    refresh: function(){
+    refresh: function () {
       this.destroy();
       this.render();
     }
   },
 
   internals: {
-    toSpaceTreeJson: function(){
+    toSpaceTreeJson: function () {
       var jsonTree = this._toSpaceTreeJsonRecursive(this.getTree());
       return jsonTree;
     },
 
-    toSpaceTreeJsonRecursive: function(tree){
+    toSpaceTreeJsonRecursive: function (tree) {
       var jsonNode = {
         id      : tree.getMathId() + '-' + _.uniqueId("satree-"),
         name    : tree.getContent(),
         children: []
       };
-      if(!tree.isLeaf()){
+      if (!tree.isLeaf()) {
         var children = tree.getChildren();
         var jsChildren = [];
-        for(var i = 0; i < children.length; i++){
+        for (var i = 0; i < children.length; i++) {
           jsChildren.push(this._toSpaceTreeJsonRecursive(children[i]));
         }
         jsonNode.children = jsChildren;
@@ -956,13 +1031,14 @@ FlancheJs.defineClass("satree.TreeRenderer", {
       return jsonNode;
     },
 
-    spaceTree : null
+    spaceTree: null
 
 
   },
 
   statics: {
-    SpaceTree: 1
+    SpaceTree            : 1,
+    CannotSummarizeSymbol: "!Summ"
   }
 
 });/**
@@ -1012,17 +1088,17 @@ FlancheJs.defineClass("satree.Panel", {
       $('body').append(modal);
       $("#myModal").modal();
       var self = this;
-      $('.tree-ok').click(function () {
+      var postCallback = function (success) {
         ok_id = $(this).attr('id').split("-");
         ok_id = ok_id[1];
-        $.post('/stree/src/php/save_handler.php', {'correct': 1, 'id': self.getId(), 'formula': self.getFormula(), 'tree': self._json[i]});
+        $.post(satree.ConfigManager.getSubmitUrl(), {'correct': success, 'id': self.getId(), 'formula': self.getFormula(), 'tree': self._json[i]});
         $('#myModal-close').click();
+      }
+      $('.tree-ok').click(function () {
+        postCallback(true);
       })
       $('.tree-fail').click(function () {
-        ok_id = $(this).attr('id').split("-");
-        ok_id = ok_id[1];
-        $.post('/stree/src/php/save_handler.php', {'correct': 0, 'id': self.getId(), 'formula': self.getFormula(), 'tree': self._json[i]});
-        $('#myModal-close').click();
+        postCallback(false);
       })
       //set pannel width
       $('.tree-div').css('width', ((100 / i) - 1) + '%');
@@ -1086,6 +1162,14 @@ FlancheJs.defineClass("satree.Manager", {
     },
     mathMode      : {
       value: satree.MathParser.ModeApply
+    },
+
+    showControls: {
+      value: true
+    },
+
+    summarizeLabels : {
+      value : false
     }
   },
 
@@ -1093,7 +1177,9 @@ FlancheJs.defineClass("satree.Manager", {
     run: function () {
       this._highlightAmbiguity();
       this._listenOnMathClick();
-      this._addControls();
+      if (this.getShowControls()) {
+        this._addControls();
+      }
     }
   },
 
@@ -1112,7 +1198,7 @@ FlancheJs.defineClass("satree.Manager", {
       var self = this;
       if (this.getShowForAllMath()) {
         $(this.getSelector()).click(function () {
-          self._listenerFunction.call(this,self);
+          self._listenerFunction.call(this, self);
         })
       }
       else {
@@ -1128,7 +1214,7 @@ FlancheJs.defineClass("satree.Manager", {
       var formulaDiv = document.createElement('div');
       formulaDiv.appendChild(document.getElementById(id).cloneNode(true));
       var formula = formulaDiv.innerHTML;
-      var parser = new satree.MathParser(id, self.getMathMode());
+      var parser = new satree.MathParser(id, satree.ConfigManager.getRenderMode());
       var mathTree = parser.parse();
       var disambiguator = new satree.Disambiguator(mathTree);
       var generatedTrees = disambiguator.generateTrees();
@@ -1136,24 +1222,30 @@ FlancheJs.defineClass("satree.Manager", {
       panel.render();
     },
 
-    addControls : function(){
+    addControls: function () {
       var self = this;
       var controlTemplate = "<div id='satree-math-controls'><h2>Disambiguator Options</h2>" +
         "Tree Display: <br/>" +
-        "<input type='radio' name='satree-math-mode' value='1' checked>Apply Mode</input><br />" +
-        "<input type='radio' name='satree-math-mode' value='2'>Math Mode</input>" +
+        "<input type='radio' name='satree-math-mode' value='1' checked> Apply Mode</input><br />" +
+        "<input type='radio' name='satree-math-mode' value='2'> Math Mode</input><br/>" +
+        "<input type='checkbox' name='satree-summarized-mode' /> Summarize Math" +
         "</div>";
       $("body").append(controlTemplate);
-      $("input[name='satree-math-mode']").change(function(){
+      $("input[name='satree-math-mode']").change(function () {
         var mode = $("input[name='satree-math-mode']:checked").val();
-        if(mode == 1){
-          self.setMathMode(satree.MathParser.ModeApply);
+        if (mode == 1) {
+          satree.ConfigManager.setRenderMode(satree.MathParser.ModeApply);
         }
         else {
-          self.setMathMode(satree.MathParser.ModeMath);
+          satree.ConfigManager.setRenderMode(satree.MathParser.ModeMath);
         }
-
-        console.log(self.getMathMode());
+      })
+      $("input[name='satree-summarized-mode']").change(function(){
+        var checked = false;
+        if($(this).prop("checked")){
+          checked = true;
+        }
+        satree.ConfigManager.setSummarizedMode(checked);
       })
     }
   }

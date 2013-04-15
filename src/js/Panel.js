@@ -45,17 +45,17 @@ FlancheJs.defineClass("satree.Panel", {
       $('body').append(modal);
       $("#myModal").modal();
       var self = this;
-      $('.tree-ok').click(function () {
+      var postCallback = function (success) {
         ok_id = $(this).attr('id').split("-");
         ok_id = ok_id[1];
-        $.post('/stree/src/php/save_handler.php', {'correct': 1, 'id': self.getId(), 'formula': self.getFormula(), 'tree': self._json[i]});
+        $.post(satree.ConfigManager.getSubmitUrl(), {'correct': success, 'id': self.getId(), 'formula': self.getFormula(), 'tree': self._json[i]});
         $('#myModal-close').click();
+      }
+      $('.tree-ok').click(function () {
+        postCallback(true);
       })
       $('.tree-fail').click(function () {
-        ok_id = $(this).attr('id').split("-");
-        ok_id = ok_id[1];
-        $.post('/stree/src/php/save_handler.php', {'correct': 0, 'id': self.getId(), 'formula': self.getFormula(), 'tree': self._json[i]});
-        $('#myModal-close').click();
+        postCallback(false);
       })
       //set pannel width
       $('.tree-div').css('width', ((100 / i) - 1) + '%');

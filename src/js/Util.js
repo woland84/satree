@@ -37,8 +37,5 @@ _.mixin({
     if(console && console.warn){
       console.warn(arguments);
     }
-    else{
-
-    }
   }
 })

@@ -165,6 +165,22 @@ FlancheJs.defineClass("satree.Node", {
         newNode.setParent(parent);
       }
       return newTree;
+    },
+
+    getSimpleRepresentation : function(){
+      var simpleReprRec = function(tree){
+        var newTree = {
+          content : tree.getContent(),
+          tag : tree.getTag(),
+          children : []
+        }
+        var children = tree.getChildren();
+        for(var i = 0; i < children.length; i++){
+          newTree.children.push(simpleReprRec(children[i]));
+        }
+        return newTree;
+      }
+      return simpleReprRec(this.clone());
     }
   },
 

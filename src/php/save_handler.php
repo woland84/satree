@@ -1,3 +1,6 @@
 <?php
-$response = json_encode($_POST);
-file_put_contents('../result/result.txt', $response);
+$post = $_POST;
+print $post['id'];
+print $post['formula'];
+print $post['correct'];
+print $post['tree'];

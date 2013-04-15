@@ -1,4 +1,5 @@
-.idea
-.iml
-.ipr
+*.idea
+*.iml
+*.ipr
+*.iws
 node_modules/

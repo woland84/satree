@@ -14,6 +14,7 @@ var JsSrcFiles = [
   'Util.js',
   'Tree.js',
   'MathParser.js',
+  'ConfigManager.js',
   'Disambiguator.js',
   'TreeRenderer.js',
   'Panel.js',
@@ -93,7 +94,7 @@ function buildCssFiles(libPath, libFiles, srcPath, srcFiles, debug) {
 
   if (!debug) {
     build = build.log("#Minifying files")
-      .cssminify()
+//      .cssminify() //TODO see why the cssminifier throws an error
       .log("#Writing to ./dist/satree.min.css")
       .write("./dist/satree.min.css");
   }
@@ -105,7 +106,7 @@ function buildCssFiles(libPath, libFiles, srcPath, srcFiles, debug) {
   build.run(function (error, results) {
     if (error) {
       console.error(error);
-      throw Error("#Build process failed!");
+      //throw Error("#Build process failed!");
     }
     else {
       console.log("#CSS files successfully built.");

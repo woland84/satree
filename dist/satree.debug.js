@@ -874,12 +874,13 @@ FlancheJs.defineClass("satree.TreeRenderer", {
     render: function () {
       var that = this;
       var json = this._toSpaceTreeJson();
+      var levelsToShow = satree.ConfigManager.getSummarizedMode() ? 1 : 100
       this._tree = new $jit.ST({
         //id of viz container element
         injectInto   : _.getId(this.getSelector()),
         //set duration for the animation
         duration     : 100,
-        levelsToShow : 100,
+        levelsToShow : levelsToShow,
         offsetX      : this.getOffsetX(),
         offsetY      : this.getOffsetY(),
         //set animation transition type
@@ -925,14 +926,15 @@ FlancheJs.defineClass("satree.TreeRenderer", {
             var mathNode = document.getElementById(node.id.split("-satree")[0]);
             if (mathNode) {
               if (mathNode.tagName == "math") {
-                content = satree.TreeRenderer.CannotSummarizeSymbol
+                content = satree.TreeRenderer = "..."
               }
               else {
+                console.log(mathNode)
                 content = "<math>" + mathNode.cloneNode(true).innerHTML + "</math>";
               }
             }
             else {
-              content = satree.TreeRenderer.CannotSummarizeSymbol;
+              content = "#USymbol#";
             }
             node.name = content;
           }
@@ -1038,7 +1040,7 @@ FlancheJs.defineClass("satree.TreeRenderer", {
 
   statics: {
     SpaceTree            : 1,
-    CannotSummarizeSymbol: "!Summ"
+    CannotSummarizeSymbol: "#USym#"
   }
 
 });/**

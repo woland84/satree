@@ -84,6 +84,11 @@ Live Example
 ------------
 You can find a live example [here](http://kwarc.flanche.net/mathViewer)
 
+Limitations
+-----------
+Currently the library is only working on Mozilla Firefox, the only browser with support for MathMl at the moment.  
+The sumarrization feature is highly dependent on correct xrefs to the MathMl tags from the annotation-xml elements, so make sure the ids are valid before testing.
+
 Credits
 -------
 This library uses the following third-party libraries:  

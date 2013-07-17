@@ -6,27 +6,30 @@
     <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
     <title>Satree demo</title>
 
-    <!-- jQuery -->
-    <script type="text/javascript" src="../lib/jQuery/jquery.min.js"></script>
 
+    <!-- jQuery, jQuery UI & JOBAD -->
 
-    <!-- jQuery UI -->
-    <script type="text/javascript" src="../lib/jQueryUI/jquery-ui-1.10.3.js"></script>
-    <link href="../lib/jQueryUI/jquery-ui.css" rel="stylesheet" type="text/css" />
-
-    <!-- JOBAD -->
-    <script type="text/javascript" src="../lib/JOBAD/JOBAD.js"></script>
-    <link href="../lib/JOBAD/JOBAD.css" rel="stylesheet" type="text/css" />
-
-    <!-- Satree -->
-    <link href="../dist/satree.debug.css" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" src="../dist/satree.debug.js"></script>
+        <script src="../lib/jQuery/jquery.min.js"></script>
+        <script src="../lib/jQueryUI/jquery-ui-1.10.3.js"></script>
+        <link href="../lib/jQueryUI/jquery-ui.css" rel="stylesheet">
+        <script src='../lib/JOBAD/JOBAD.js'></script>
+        <link rel='stylesheet' type='text/css' href='../lib/JOBAD/JOBAD.css'>
    
+        <!-- Satree -->
+        <script type="text/javascript" src="../dist/satree.debug.js"></script>
+        <link href="../dist/satree.debug.css" rel="stylesheet" type="text/css" />
 
     <script type="text/javascript">
         jQuery(document).ready(function(){
-            var manager = new satree.Manager("body");
-            manager.run();
+
+            var myJOBAD = new JOBAD("div.document"); 
+
+            JOBAD.repo.provide(["jobad.debug"], ["http://kwarc.github.io/jobad-modules/"], function(s, msg){
+                myJOBAD.modules.load(["math.satree", "jobad.config"], function(s){
+                    myJOBAD.Setup(); 
+                }); 
+            });
+            
         });
     </script>
 </head>

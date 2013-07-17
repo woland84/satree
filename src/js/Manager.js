@@ -7,7 +7,7 @@
 FlancheJs.defineClass("satree.Manager", {
 
   init: function (selector) {
-    this.setSelector(selector + " " + this.getSelector());
+    this.setSelector(jQuery(selector).find(this.getSelector()));
   },
 
   properties: {
@@ -21,10 +21,6 @@ FlancheJs.defineClass("satree.Manager", {
       value: satree.MathParser.ModeApply
     },
 
-    showControls: {
-      value: true
-    },
-
     summarizeLabels : {
       value : false
     }
@@ -33,10 +29,9 @@ FlancheJs.defineClass("satree.Manager", {
   methods: {
     run: function () {
       this._highlightAmbiguity();
-      this._listenOnMathClick();
-      if (this.getShowControls()) {
-        this._addControls();
-      }
+    },
+    stop: function() {
+      this._unhighlightAmbiguity(); 
     }
   },
 
@@ -50,21 +45,11 @@ FlancheJs.defineClass("satree.Manager", {
         }
       });
     },
-
-    listenOnMathClick: function () {
-      var self = this;
-      if (this.getShowForAllMath()) {
-        $(this.getSelector()).click(function () {
-          self._listenerFunction.call(this, self);
-        })
-      }
-      else {
-        $(this.getSelector() + ":has(csymbol[cd='cdlf'])").click(function () {
-          self._listenerFunction.call(this, self);
-        })
-      }
+    unhighlightAmbiguity: function() {
+      $(this.getSelector()).each(function(){
+        $(this).unwrap(); 
+      })
     },
-
     listenerFunction: function (self) {
       $(this).parent().css('color', 'blue');
       var id = this.getAttribute("id");
@@ -77,33 +62,6 @@ FlancheJs.defineClass("satree.Manager", {
       var generatedTrees = disambiguator.generateTrees();
       var panel = new satree.Panel(id, formula, generatedTrees);
       panel.render();
-    },
-
-    addControls: function () {
-      var self = this;
-      var controlTemplate = "<div id='satree-math-controls'><h2>Disambiguator Options</h2>" +
-        "Tree Display: <br/>" +
-        "<input type='radio' name='satree-math-mode' value='1' checked> Apply Mode</input><br />" +
-        "<input type='radio' name='satree-math-mode' value='2'> Math Mode</input><br/>" +
-        "<input type='checkbox' name='satree-summarized-mode' /> Summarize Math" +
-        "</div>";
-      $("body").append(controlTemplate);
-      $("input[name='satree-math-mode']").change(function () {
-        var mode = $("input[name='satree-math-mode']:checked").val();
-        if (mode == 1) {
-          satree.ConfigManager.setRenderMode(satree.MathParser.ModeApply);
-        }
-        else {
-          satree.ConfigManager.setRenderMode(satree.MathParser.ModeMath);
-        }
-      })
-      $("input[name='satree-summarized-mode']").change(function(){
-        var checked = false;
-        if($(this).prop("checked")){
-          checked = true;
-        }
-        satree.ConfigManager.setSummarizedMode(checked);
-      })
     }
   }
 });

@@ -1,1 +1,1 @@
-(function($, _){$(function(){
+(function($, _){

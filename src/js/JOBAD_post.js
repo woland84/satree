@@ -28,17 +28,16 @@ JOBAD.modules.register({
     	var manager = new satree.Manager(JOBADInstance.element);
         this.localStore.set("manager", manager); //Store the manager in the local Store for this module
     },
-    activate: function(){
-    	this.localStore.get("manager").run();
-    },
-    deactivate: function(){
-    	this.localStore.get("manager").stop();
-    },
-    leftClick: function(target){
+    contextMenuEntries: function(target){
     	var target = target.closest("math");
     	if(target.length > 0){
     		var man = this.localStore.get("manager"); 
-    		man._listenerFunction.call(target.get(0), man); 
+
+    		return {
+    			"SATree": function(){
+    					man._listenerFunction.call(target.get(0), man); 
+    			}
+    		};
     	}
     }
 });

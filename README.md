@@ -5,7 +5,6 @@ Description
 -----------
 Javascript library that allows display of math formulas in Context MathML as trees for disambiguation.
 
-
 Build
 -----
 To build from the sources you will need [nodejs](http://nodejs.org/) installed on your system. 
@@ -77,7 +76,9 @@ There is a simple php script under src/php that you can use as an example.
 
 Issues
 ------
-If you encounter any issues please submit a bug report at https://github.com/woland84/satree/issues
+Currently this library is being ported to JOBAD. 
+Currently there are issues with jQuery UI / Bootstrap compatibility. 
+
 
 
 Live Example

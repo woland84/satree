@@ -23,7 +23,6 @@ var JsSrcFiles = [
 
 var JsLibFiles = [
   "Flanche/FlancheJs.js",
-  "bootstrap/js/bootstrap.min.js",
   "Jit/spaceTree.js"
 ];
 
@@ -32,7 +31,6 @@ var CSSSrcFiles = [
 ];
 
 var CSSLibFiles = [
-  'bootstrap/css/bootstrap.min.css',
   'Jit/spaceTree.css'
 ];
 

@@ -23,10 +23,7 @@ var JsSrcFiles = [
 
 var JsLibFiles = [
   "Flanche/FlancheJs.js",
-  "JQuery/jQuery.min.js",
-  "bootstrap/js/bootstrap.min.js",
-  "Jit/spaceTree.js",
-  "Underscore/underscore.js"
+  "Jit/spaceTree.js"
 ];
 
 var CSSSrcFiles = [
@@ -34,7 +31,6 @@ var CSSSrcFiles = [
 ];
 
 var CSSLibFiles = [
-  'bootstrap/css/bootstrap.min.css',
   'Jit/spaceTree.css'
 ];
 
@@ -47,6 +43,9 @@ function buildJsFiles(libPath, libFiles, srcPath, srcFiles, debug) {
     return './' + srcPath + '/' + relPath;
   });
   var allFiles = absLibPaths.concat(absSrcPaths);
+  allFiles.unshift('./' + srcPath + '/' + "JOBAD_pre.js"); 
+  allFiles.push('./' + srcPath + '/' + "JOBAD_post.js"); 
+
   var build = new gear.Queue({registry: new gear.Registry({module: 'gear-lib'})})
     .log("#Building the Javascript dist file")
     .read(allFiles)

@@ -7,7 +7,7 @@
 FlancheJs.defineClass("satree.Manager", {
 
   init: function (selector) {
-    this.setSelector(selector + " " + this.getSelector());
+    this.setSelector($(selector).find(this.getSelector()));
   },
 
   properties: {
@@ -37,6 +37,13 @@ FlancheJs.defineClass("satree.Manager", {
       if (this.getShowControls()) {
         this._addControls();
       }
+    },
+    stop: function() {
+      if (this.getShowControls()) {
+        this._removeControls();
+      }
+      this._unlistenOnMathClick(); 
+      this._unhighlightAmbiguity(); 
     }
   },
 
@@ -51,6 +58,11 @@ FlancheJs.defineClass("satree.Manager", {
       });
     },
 
+    unhighlightAmbiguity: function() {
+      $(this.getSelector()).each(function(){
+        $(this).unwrap(); 
+      })
+    },
     listenOnMathClick: function () {
       var self = this;
       if (this.getShowForAllMath()) {
@@ -59,12 +71,14 @@ FlancheJs.defineClass("satree.Manager", {
         })
       }
       else {
-        $(this.getSelector() + ":has(csymbol[cd='cdlf'])").click(function () {
+        $(this.getSelector()).filter(":has(csymbol[cd='cdlf'])").click(function () {
           self._listenerFunction.call(this, self);
         })
       }
     },
-
+    unlistenOnMathClick: function () {
+       $(this.getSelector()).off("click"); 
+    },
     listenerFunction: function (self) {
       $(this).parent().css('color', 'blue');
       var id = this.getAttribute("id");
@@ -104,6 +118,9 @@ FlancheJs.defineClass("satree.Manager", {
         }
         satree.ConfigManager.setSummarizedMode(checked);
       })
+    },
+    removeControls: function(){
+      $(document.getElementById("satree-math-controls")).remove(); 
     }
   }
 });

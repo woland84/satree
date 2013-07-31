@@ -5,12 +5,28 @@
 <head>
     <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
     <title>Satree demo</title>
-    <link href="../dist/satree.debug.css" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" src="../dist/satree.debug.js"></script>
+
+
+    <!-- JOBAd + Libs for JOBAD -->
+
+        <script src='../lib/JOBAD/libs/js/libs.js'></script>
+        <script src='../lib/JOBAD/JOBAD.js'></script>
+
+        <link href="../lib/JOBAD/libs/css/libs.css" rel="stylesheet" type="text/css" />
+        <link rel='stylesheet' type='text/css' href='../lib/JOBAD/JOBAD.css'>
+
+        <script src='../dist/satree.min.js'></script>
     <script type="text/javascript">
         jQuery(document).ready(function(){
-            var manager = new satree.Manager("body");
-            manager.run();
+
+            var myJOBAD = new JOBAD("div.document"); 
+
+            JOBAD.repo.provide(["jobad.debug"], ["http://kwarc.github.io/jobad-modules/"], function(s, msg){
+                myJOBAD.modules.load(["math.satree", "jobad.config"], function(s){
+                    myJOBAD.Setup(); 
+                }); 
+            });
+            
         });
     </script>
 </head>
